@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'style.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/rendering.dart';
 
 void main() {
   runApp(MaterialApp(theme: theme, home: MyApp()));
@@ -20,6 +21,12 @@ class _MyAppState extends State<MyApp> {
   var tab = 0;
   var data = [];
 
+  addData(a) {
+    setState(() {
+      data.add(a);
+    });
+  }
+
   getData() async {
     var result = await http
         .get(Uri.parse('https://codingapple1.github.io/app/data.json'));
@@ -37,6 +44,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    // print(data.length);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -44,7 +52,12 @@ class _MyAppState extends State<MyApp> {
         ),
         actions: const [Icon(Icons.add_box_outlined)],
       ),
-      body: tab == 0 ? Home(data: data) : Text('샵페이지'),
+      body: tab == 0
+          ? Home(
+              data: data,
+              addData: addData,
+            )
+          : Text('샵페이지'),
       bottomNavigationBar: BottomNavigationBar(
         showUnselectedLabels: false,
         showSelectedLabels: false,
@@ -68,15 +81,55 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class Home extends StatelessWidget {
-  const Home({super.key, this.data});
+class Home extends StatefulWidget {
+  const Home({super.key, this.data, this.addData});
   final data;
+  final addData;
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  var scroll = ScrollController();
+  var handling = 0;
+
+  getDataMore() async {
+    var result = await http
+        .get(Uri.parse('https://codingapple1.github.io/app/more1.json'));
+    var result2 = jsonDecode(result.body);
+    widget.addData(result2);
+    handling++;
+  }
+
+  getDataMore2() async {
+    var result = await http
+        .get(Uri.parse('https://codingapple1.github.io/app/more2.json'));
+    var result2 = jsonDecode(result.body);
+    widget.addData(result2);
+    handling++;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    scroll.addListener(() {
+      if (scroll.position.pixels == scroll.position.maxScrollExtent) {
+        if (handling == 0) {
+          getDataMore();
+        } else if (handling == 1) {
+          getDataMore2();
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (data.isNotEmpty) {
+    if (widget.data.isNotEmpty) {
       return ListView.builder(
-          itemCount: 3,
+          itemCount: widget.data.length,
+          controller: scroll,
           itemBuilder: (c, i) {
             return Column(
               children: [
@@ -87,10 +140,10 @@ class Home extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Image.network(data[i]['image']),
-                      Text('좋아요 ${data[i]['likes']}'),
-                      Text('글쓴이 ${data[i]['user']}'),
-                      Text('글내용 ${data[i]['content']}'),
+                      Image.network(widget.data[i]['image']),
+                      Text('좋아요 ${widget.data[i]['likes']}'),
+                      Text('글쓴이 ${widget.data[i]['user']}'),
+                      Text('글내용 ${widget.data[i]['content']}'),
                     ],
                   ),
                 )
