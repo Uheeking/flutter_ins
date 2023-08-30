@@ -3,6 +3,8 @@ import 'style.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 void main() {
   runApp(MaterialApp(theme: theme, home: MyApp()));
@@ -20,6 +22,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   var tab = 0;
   var data = [];
+  var userImage;
 
   addData(a) {
     setState(() {
@@ -44,13 +47,30 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // print(data.length);
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Instagram',
         ),
-        actions: const [Icon(Icons.add_box_outlined)],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add_box_outlined),
+            onPressed: () async {
+              var picker = ImagePicker();
+              var image = await picker.pickImage(source: ImageSource.gallery);
+              if (image != null) {
+                setState(() {
+                  userImage = File(image.path);
+                });
+              }
+
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Upload(userImage: userImage)));
+            },
+          )
+        ],
       ),
       body: tab == 0
           ? Home(
@@ -161,5 +181,34 @@ class _HomeState extends State<Home> {
         ),
       );
     }
+  }
+}
+
+class Upload extends StatelessWidget {
+  const Upload({Key? key, this.userImage}) : super(key: key);
+  final userImage;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 300,
+              child: Image.file(userImage),
+            ),
+            Text('이미지업로드화면'),
+            IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Icon(Icons.close)),
+            TextField(),
+            TextField(),
+            TextButton(onPressed: () {}, child: Text('추가'))
+          ],
+        ));
   }
 }
