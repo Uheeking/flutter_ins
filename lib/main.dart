@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'style.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,6 +24,35 @@ class _MyAppState extends State<MyApp> {
   var tab = 0;
   var data = [];
   var userImage;
+  var userContent;
+
+  saveData(){
+  var storage = await SharedPreferences.getInstance();
+  storage.setString('name', 'john');
+  var result = storage.getString('name');
+  print(result);
+}
+
+  addMyData() {
+    var myData = {
+      'id': data.length,
+      'image': userImage,
+      'likes': 5,
+      'date': 'July 25',
+      'content': userContent,
+      'liked': false,
+      'user': 'John Kim'
+    };
+    setState(() {
+      data.insert(0, myData);
+    });
+  }
+
+  setUserContent(a) {
+    setState(() {
+      userContent = a;
+    });
+  }
 
   addData(a) {
     setState(() {
@@ -43,6 +73,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     getData();
+    saveData();
   }
 
   @override
@@ -67,7 +98,10 @@ class _MyAppState extends State<MyApp> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Upload(userImage: userImage)));
+                      builder: (context) => Upload(
+                          userImage: userImage,
+                          setUserContent: setUserContent,
+                          addMyData: addMyData)));
             },
           )
         ],
@@ -160,7 +194,9 @@ class _HomeState extends State<Home> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Image.network(widget.data[i]['image']),
+                      widget.data[i]['image'].runtimeType == String
+                          ? Image.network(widget.data[i]['image'])
+                          : Image.file(widget.data[i]['image']),
                       Text('좋아요 ${widget.data[i]['likes']}'),
                       Text('글쓴이 ${widget.data[i]['user']}'),
                       Text('글내용 ${widget.data[i]['content']}'),
@@ -185,13 +221,22 @@ class _HomeState extends State<Home> {
 }
 
 class Upload extends StatelessWidget {
-  const Upload({Key? key, this.userImage}) : super(key: key);
+  const Upload({Key? key, this.userImage, this.setUserContent, this.addMyData})
+      : super(key: key);
   final userImage;
+  final setUserContent;
+  final addMyData;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(),
+        appBar: AppBar(actions: [
+          IconButton(
+              onPressed: () {
+                addMyData();
+              },
+              icon: Icon(Icons.send))
+        ]),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -205,8 +250,9 @@ class Upload extends StatelessWidget {
                   Navigator.pop(context);
                 },
                 icon: Icon(Icons.close)),
-            TextField(),
-            TextField(),
+            TextField(onChanged: (text) {
+              setUserContent(text);
+            }),
             TextButton(onPressed: () {}, child: Text('추가'))
           ],
         ));
