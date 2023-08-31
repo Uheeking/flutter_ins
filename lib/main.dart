@@ -10,9 +10,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  runApp(ChangeNotifierProvider(
-      create: (context) => Store1(),
-      child: MaterialApp(theme: theme, home: MyApp())));
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (c) => Store1()),
+    ChangeNotifierProvider(create: (c) => Store2()),
+  ], child: MaterialApp(theme: theme, home: MyApp())));
 }
 
 class ActionsIconTheme {}
@@ -297,35 +298,73 @@ class Store1 extends ChangeNotifier {
   }
 }
 
+class Store2 extends ChangeNotifier {
+  var profileImage = [];
+
+  getData() async {
+    var result = await http
+        .get(Uri.parse('https://codingapple1.github.io/app/profile.json'));
+    var result2 = jsonDecode(result.body);
+    profileImage = result2;
+    print(profileImage);
+    notifyListeners();
+  }
+}
+
 class Profile extends StatelessWidget {
   const Profile({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.watch<Store1>().name)),
-      body: Column(children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Icon(Icons.abc),
-            Text('팔로우 ${context.watch<Store1>().follower}명'),
-            ElevatedButton(
-                onPressed: () {
-                  context.read<Store1>().clickButton();
-                },
-                child: Text('팔로우'))
+        appBar: AppBar(title: Text(context.watch<Store1>().name)),
+        body: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: ProfileHeader()),
+            SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (c, i) =>
+                      Image.network(context.watch<Store2>().profileImage[i]),
+                  childCount: 6,
+                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2))
           ],
-        ),
-        TextField(onChanged: (text) {
-          context.read<Store1>().readName(text);
-        }),
-        ElevatedButton(
-            onPressed: () {
-              context.read<Store1>().changeName();
-            },
-            child: Text('변경'))
-      ]),
-    );
+        ));
+  }
+}
+
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Icon(Icons.abc),
+          Text('팔로우 ${context.watch<Store1>().follower}명'),
+          ElevatedButton(
+              onPressed: () {
+                context.read<Store1>().clickButton();
+              },
+              child: Text('팔로우')),
+          ElevatedButton(
+              onPressed: () {
+                context.read<Store2>().getData();
+              },
+              child: Text('사진가져오기'))
+        ],
+      ),
+      TextField(onChanged: (text) {
+        context.read<Store1>().readName(text);
+      }),
+      ElevatedButton(
+          onPressed: () {
+            context.read<Store1>().changeName();
+          },
+          child: Text('변경')),
+    ]);
   }
 }
