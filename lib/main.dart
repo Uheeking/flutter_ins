@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter/cupertino.dart'
 
 void main() {
   runApp(MaterialApp(theme: theme, home: MyApp()));
@@ -197,6 +198,10 @@ class _HomeState extends State<Home> {
                       widget.data[i]['image'].runtimeType == String
                           ? Image.network(widget.data[i]['image'])
                           : Image.file(widget.data[i]['image']),
+                          GestureDetector(child: Text(widget.data[i]['user']),
+                          onTap:(){
+                            Navigator.push(context, CupertinoPageRoute(builder: (c)=>Profile()));
+                          }),
                       Text('좋아요 ${widget.data[i]['likes']}'),
                       Text('글쓴이 ${widget.data[i]['user']}'),
                       Text('글내용 ${widget.data[i]['content']}'),
@@ -256,5 +261,17 @@ class Upload extends StatelessWidget {
             TextButton(onPressed: () {}, child: Text('추가'))
           ],
         ));
+  }
+}
+
+class Profile extends StatelessWidget {
+  const Profile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Text('프로필페이지'),
+    );
   }
 }
