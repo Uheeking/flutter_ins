@@ -272,13 +272,27 @@ class Upload extends StatelessWidget {
 class Store1 extends ChangeNotifier {
   var name = 'Uheeking';
   var changed;
+  var follower = 0;
+  var click = false;
   readName(text) {
     changed = text;
     notifyListeners();
   }
 
   changeName() {
-    name = changed;
+    if (changed != null) {
+      name = changed;
+    }
+    notifyListeners();
+  }
+
+  clickButton() {
+    click = !click;
+    if (click == true) {
+      follower++;
+    } else {
+      follower--;
+    }
     notifyListeners();
   }
 }
@@ -291,6 +305,18 @@ class Profile extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(context.watch<Store1>().name)),
       body: Column(children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Icon(Icons.abc),
+            Text('팔로우 ${context.watch<Store1>().follower}명'),
+            ElevatedButton(
+                onPressed: () {
+                  context.read<Store1>().clickButton();
+                },
+                child: Text('팔로우'))
+          ],
+        ),
         TextField(onChanged: (text) {
           context.read<Store1>().readName(text);
         }),
