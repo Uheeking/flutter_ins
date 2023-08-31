@@ -6,10 +6,13 @@ import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:flutter/cupertino.dart'
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MaterialApp(theme: theme, home: MyApp()));
+  runApp(ChangeNotifierProvider(
+      create: (context) => Store1(),
+      child: MaterialApp(theme: theme, home: MyApp())));
 }
 
 class ActionsIconTheme {}
@@ -27,12 +30,12 @@ class _MyAppState extends State<MyApp> {
   var userImage;
   var userContent;
 
-  saveData(){
-  var storage = await SharedPreferences.getInstance();
-  storage.setString('name', 'john');
-  var result = storage.getString('name');
-  print(result);
-}
+  saveData() async {
+    var storage = await SharedPreferences.getInstance();
+    storage.setString('name', 'john');
+    var result = storage.getString('name');
+    print(result);
+  }
 
   addMyData() {
     var myData = {
@@ -198,9 +201,11 @@ class _HomeState extends State<Home> {
                       widget.data[i]['image'].runtimeType == String
                           ? Image.network(widget.data[i]['image'])
                           : Image.file(widget.data[i]['image']),
-                          GestureDetector(child: Text(widget.data[i]['user']),
-                          onTap:(){
-                            Navigator.push(context, CupertinoPageRoute(builder: (c)=>Profile()));
+                      GestureDetector(
+                          child: Text(widget.data[i]['user']),
+                          onTap: () {
+                            Navigator.push(context,
+                                CupertinoPageRoute(builder: (c) => Profile()));
                           }),
                       Text('좋아요 ${widget.data[i]['likes']}'),
                       Text('글쓴이 ${widget.data[i]['user']}'),
@@ -264,14 +269,37 @@ class Upload extends StatelessWidget {
   }
 }
 
+class Store1 extends ChangeNotifier {
+  var name = 'Uheeking';
+  var changed;
+  readName(text) {
+    changed = text;
+    notifyListeners();
+  }
+
+  changeName() {
+    name = changed;
+    notifyListeners();
+  }
+}
+
 class Profile extends StatelessWidget {
   const Profile({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Text('프로필페이지'),
+      appBar: AppBar(title: Text(context.watch<Store1>().name)),
+      body: Column(children: [
+        TextField(onChanged: (text) {
+          context.read<Store1>().readName(text);
+        }),
+        ElevatedButton(
+            onPressed: () {
+              context.read<Store1>().changeName();
+            },
+            child: Text('변경'))
+      ]),
     );
   }
 }
