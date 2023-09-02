@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'notification.dart';
 
 void main() {
   runApp(MultiProvider(providers: [
@@ -77,6 +78,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    initNotification();
     getData();
     saveData();
   }
@@ -84,6 +86,11 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showNotification();
+        },
+      ),
       appBar: AppBar(
         title: Text(
           'Instagram',
